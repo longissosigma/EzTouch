@@ -26,16 +26,12 @@ class FaceDetector:
         return None, None
 
     def get_mouth_open_ratio(self, results):
-        """Tính toán biên độ há miệng chuẩn hóa dựa trên khoảng cách mắt."""
         if results.multi_face_landmarks:
             face_landmarks = results.multi_face_landmarks[0]
-            
-            # Khoảng cách môi trên và môi dưới
             top_lip = face_landmarks.landmark[13]
             bottom_lip = face_landmarks.landmark[14]
             mouth_dist = math.hypot(top_lip.x - bottom_lip.x, top_lip.y - bottom_lip.y)
             
-            # Sử dụng khoảng cách 2 mắt làm gốc chuẩn hóa tránh việc người dùng ghé sát/xa camera làm thay đổi giá trị
             left_eye = face_landmarks.landmark[33]
             right_eye = face_landmarks.landmark[263]
             eye_dist = math.hypot(left_eye.x - right_eye.x, left_eye.y - right_eye.y)
@@ -44,6 +40,18 @@ class FaceDetector:
             return mouth_dist / eye_dist
         return 0
 
-    def is_mouth_open(self, results, threshold):
-        ratio = self.get_mouth_open_ratio(results)
-        return ratio > threshold
+    def get_head_roll(self, results):
+        """Tính góc nghiêng đầu (Roll) dựa trên độ lệch tọa độ 2 mắt."""
+        if results.multi_face_landmarks:
+            face_landmarks = results.multi_face_landmarks[0]
+            left_eye = face_landmarks.landmark[33]
+            right_eye = face_landmarks.landmark[263]
+            
+            # Tính toán góc bằng hàm atan2
+            delta_x = right_eye.x - left_eye.x
+            delta_y = right_eye.y - left_eye.y
+            angle_rad = math.atan2(delta_y, delta_x)
+            angle_deg = math.degrees(angle_rad)
+            
+            return angle_deg
+        return 0.0
