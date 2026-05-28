@@ -1,7 +1,8 @@
 # Class điều khiển chuột qua PyAutoGUI, map tọa độ camera ra màn hình
 
+# Class điều khiển chuột qua PyAutoGUI, map tọa độ camera ra màn hình
+
 import pyautogui
-import time
 import math
 import config
 
@@ -9,14 +10,13 @@ pyautogui.FAILSAFE = False
 
 class MouseController:
     def __init__(self):
-        # Lưu trữ tọa độ hiện tại của chuột để thực hiện tính toán LERP
         current_px, current_py = pyautogui.position()
         self.curr_x = current_px
         self.curr_y = current_py
         self.is_dragging = False
 
     def move_to_smooth(self, x_norm, y_norm):
-        """Map tọa độ, áp dụng bộ gia tốc góc chết và nội suy tuyến tính (LERP)."""
+        """Map tọa độ, áp dụng bộ gia tốc góc chết và nội suy tuyến tính thích ứng động."""
         # 1. Tính toán vector lệch so với tâm đã được Calibration định vị
         offset_x = x_norm - config.CALIBRATED_CENTER_X
         offset_y = y_norm - config.CALIBRATED_CENTER_Y
@@ -25,7 +25,6 @@ class MouseController:
         dist_from_center = math.hypot(offset_x, offset_y)
         if dist_from_center > 0:
             scale = math.pow(dist_from_center, config.MOUSE_ACCEL_FACTOR - 1.0)
-            # Giới hạn scale để tránh chuột nhảy quá xa đột ngột
             scale = min(scale, 2.5) 
             offset_x *= (1.0 + scale)
             offset_y *= (1.0 + scale)
@@ -41,9 +40,23 @@ class MouseController:
         target_x = max(0, min(config.SCREEN_WIDTH - 1, mapped_x * config.SCREEN_WIDTH))
         target_y = max(0, min(config.SCREEN_HEIGHT - 1, mapped_y * config.SCREEN_HEIGHT))
         
-        # 4. Áp dụng thuật toán LERP (Linear Interpolation) khử Jitter tuyệt đối
-        self.curr_x = self.curr_x + config.MOUSE_LERP_ALPHA * (target_x - self.curr_x)
-        self.curr_y = self.curr_y + config.MOUSE_LERP_ALPHA * (target_y - self.curr_y)
+        # 🌟 NÂNG CẤP CAO CẤP: LERP ALPHA THÍCH ỨNG THEO VẬN TỐC RUNG LẮC
+        # Tính khoảng cách từ vị trí chuột hiện tại đến mục tiêu mới
+        move_dist = math.hypot(target_x - self.curr_x, target_y - self.curr_y)
+        
+        if move_dist < 5.0:
+            # Nếu khoảng cách cực nhỏ (người dùng đang bị run tại chỗ), siết chặt Alpha để ghìm cứng chuột
+            adaptive_alpha = 0.08
+        elif move_dist > 100.0:
+            # Nếu di chuyển khoảng cách xa (chủ động quay đầu chuyển vùng), tăng Alpha để bám đuổi nhạy bén
+            adaptive_alpha = 0.35
+        else:
+            # Các vùng di chuyển thông thường dùng hệ số mịn mượt tuyến tính
+            adaptive_alpha = config.MOUSE_LERP_BASE_ALPHA
+        
+        # 4. Áp dụng thuật toán LERP với hệ số Alpha thích ứng động vừa tính
+        self.curr_x = self.curr_x + adaptive_alpha * (target_x - self.curr_x)
+        self.curr_y = self.curr_y + adaptive_alpha * (target_y - self.curr_y)
         
         # Điều khiển hệ điều hành di chuyển chuột
         pyautogui.moveTo(int(self.curr_x), int(self.curr_y), duration=0.0)
