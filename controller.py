@@ -1,8 +1,7 @@
 # Class điều khiển chuột qua PyAutoGUI, map tọa độ camera ra màn hình
 
-# Class điều khiển chuột qua PyAutoGUI, map tọa độ camera ra màn hình
-
 import pyautogui
+import numpy as np
 import math
 import config
 
@@ -13,67 +12,68 @@ class MouseController:
         current_px, current_py = pyautogui.position()
         self.curr_x = current_px
         self.curr_y = current_py
-        self.is_dragging = False
+        self.is_scroll_mode = False
 
     def move_to_smooth(self, x_norm, y_norm):
-        """Map tọa độ, áp dụng bộ gia tốc góc chết và nội suy tuyến tính thích ứng động."""
-        # 1. Tính toán vector lệch so với tâm đã được Calibration định vị
-        offset_x = x_norm - config.CALIBRATED_CENTER_X
-        offset_y = y_norm - config.CALIBRATED_CENTER_Y
+        """Hệ thống map tọa độ thông minh tự co giãn theo Chế độ người dùng chọn."""
         
-        # 2. Áp dụng cơ chế Mouse Acceleration hình nón (nhân hệ số lũy thừa khi ra xa tâm)
-        dist_from_center = math.hypot(offset_x, offset_y)
-        if dist_from_center > 0:
-            scale = math.pow(dist_from_center, config.MOUSE_ACCEL_FACTOR - 1.0)
-            scale = min(scale, 2.5) 
-            offset_x *= (1.0 + scale)
-            offset_y *= (1.0 + scale)
-            
-        # Re-map lại tọa độ ảo sau khi tăng tốc
-        x_accelerated = config.CALIBRATED_CENTER_X + offset_x
-        y_accelerated = config.CALIBRATED_CENTER_Y + offset_y
-
-        # 3. Chuyển đổi sang hệ tọa độ màn hình dựa trên vùng biên an toàn
-        mapped_x = (x_accelerated - config.FRAME_INNER_X1) / (config.FRAME_INNER_X2 - config.FRAME_INNER_X1)
-        mapped_y = (y_accelerated - config.FRAME_INNER_Y1) / (config.FRAME_INNER_Y2 - config.FRAME_INNER_Y1)
+        # 🌟 ĐỘC LẬP: Nếu là Người thường (REGULAR), siết biên ảo hẹp hơn sâu nữa để triệt tiêu hiện tượng mỏi cổ
+        current_reduction = 0.14 if config.CURRENT_MODE == "REGULAR" else config.MATH_DEADZONE_REDUCTION
         
-        target_x = max(0, min(config.SCREEN_WIDTH - 1, mapped_x * config.SCREEN_WIDTH))
-        target_y = max(0, min(config.SCREEN_HEIGHT - 1, mapped_y * config.SCREEN_HEIGHT))
+        # 1. Tính toán biên giới hạn toán học ảo dựa trên vùng an toàn động
+        boundary_x1 = config.FRAME_INNER_X1 + current_reduction
+        boundary_x2 = config.FRAME_INNER_X2 - current_reduction
+        boundary_y1 = config.FRAME_INNER_Y1 + current_reduction
+        boundary_y2 = config.FRAME_INNER_Y2 - current_reduction
         
-        # 🌟 NÂNG CẤP CAO CẤP: LERP ALPHA THÍCH ỨNG THEO VẬN TỐC RUNG LẮC
-        # Tính khoảng cách từ vị trí chuột hiện tại đến mục tiêu mới
+        # 2. Ánh xạ trực tiếp tuyến tính tuyệt đối 1:1 theo tọa độ phần trăm
+        mapped_x = (x_norm - boundary_x1) / (boundary_x2 - boundary_x1)
+        mapped_y = (y_norm - boundary_y1) / (boundary_y2 - boundary_y1)
+        
+        # Bo biên chống tràn kẹt chuột ngoài rìa màn hình
+        mapped_x = np.clip(mapped_x, 0.0, 1.0)
+        mapped_y = np.clip(mapped_y, 0.0, 1.0)
+        
+        # Tính toán tọa độ Pixel đích thực tế trên màn hình máy tính
+        target_x = mapped_x * config.SCREEN_WIDTH
+        target_y = mapped_y * config.SCREEN_HEIGHT
+        
+        # 3. Tính khoảng cách dịch chuyển để kích hoạt bộ lọc thích ứng
         move_dist = math.hypot(target_x - self.curr_x, target_y - self.curr_y)
         
-        if move_dist < 5.0:
-            # Nếu khoảng cách cực nhỏ (người dùng đang bị run tại chỗ), siết chặt Alpha để ghìm cứng chuột
-            adaptive_alpha = 0.08
-        elif move_dist > 100.0:
-            # Nếu di chuyển khoảng cách xa (chủ động quay đầu chuyển vùng), tăng Alpha để bám đuổi nhạy bén
-            adaptive_alpha = 0.35
+        # PHÂN TÁCH LUỒNG TOÁN HỌC DỰA TRÊN CHẾ ĐỘ NGƯỜI DÙNG CHỌN
+        if config.CURRENT_MODE == "PARKINSON":
+            # --- PHIÊN BẢN CHO NGƯỜI RUN (PARKINSON MODE) ---
+            if move_dist < 8.0:
+                adaptive_alpha = 0.05  # Phanh ma sát ảo ghìm cứng chuột đứng im hoàn toàn khi bị run bần bật
+            elif move_dist > 35.0:
+                adaptive_alpha = 0.85  
+            else:
+                adaptive_alpha = config.MOUSE_LERP_BASE_ALPHA
         else:
-            # Các vùng di chuyển thông thường dùng hệ số mịn mượt tuyến tính
-            adaptive_alpha = config.MOUSE_LERP_BASE_ALPHA
+            # --- PHIÊN BẢN CHO NGƯỜI KHÔNG RUN (ACTIVE SIÊU TỐC MODE - ZERO DELAY) ---
+            if move_dist < 2.5:
+                adaptive_alpha = 0.20  # Khử nhiễu camera nhẹ tại chỗ
+            else:
+                # 🌟 Ép hệ số lên 1.0: Không delay, không trễ lọc, mũi nhích một milimet chuột phóng đúng vị trí tương tự realtime!
+                adaptive_alpha = 1.0  
         
-        # 4. Áp dụng thuật toán LERP với hệ số Alpha thích ứng động vừa tính
+        # Thực hiện dịch chuyển tọa độ con trỏ nền
         self.curr_x = self.curr_x + adaptive_alpha * (target_x - self.curr_x)
         self.curr_y = self.curr_y + adaptive_alpha * (target_y - self.curr_y)
         
-        # Điều khiển hệ điều hành di chuyển chuột
+        # Điều khiển chuột hệ điều hành
         pyautogui.moveTo(int(self.curr_x), int(self.curr_y), duration=0.0)
 
     def execute_click(self):
-        """Thực hiện click đơn"""
-        if not self.is_dragging:
-            pyautogui.click()
+        """Thực hiện click chuột trái đơn"""
+        pyautogui.click()
 
-    def start_drag(self):
-        """Kích hoạt trạng thái nhấn giữ chuột trái (Mouse Down)"""
-        if not self.is_dragging:
-            pyautogui.mouseDown()
-            self.is_dragging = True
-
-    def end_drag(self):
-        """Giải phóng trạng thái nhấn giữ chuột (Mouse Up)"""
-        if self.is_dragging:
-            pyautogui.mouseUp()
-            self.is_dragging = False
+    def execute_scroll(self, anchor_y, current_y):
+        """Cuộn chuột dọc thích ứng dựa trên độ lệch chiều dọc đầu."""
+        diff_y = current_y - anchor_y
+        if abs(diff_y) < 0.015:
+            return
+        scroll_amount = int(diff_y * -1800)
+        if scroll_amount != 0:
+            pyautogui.scroll(scroll_amount)

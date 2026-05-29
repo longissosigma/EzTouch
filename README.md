@@ -3,13 +3,13 @@
 Ứng dụng hỗ trợ công nghệ (Accessibility) giúp người khuyết tật vận động hoặc người mắc hội chứng Parkinson có thể điều khiển chuột máy tính thông qua cử động mặt và ánh mắt.
 
 ## Tính năng nổi bật
-- **Auto-Calibration:** Tự động hiệu chỉnh tâm điều khiển và ngưỡng há mồm động theo cơ địa từng người.
-- **Adaptive Smooth Filter:** Tích hợp bộ lọc One Euro Filter kết hợp LERP động giúp con trỏ chuột ghìm chắc chắn, triệt tiêu hoàn toàn hiện tượng rung lắc (Jitter).
-- **Mouse Acceleration:** Hệ số tăng tốc thông minh giúp nhích nhẹ đầu chuột đã có thể lướt ra kịch biên màn hình.
-- **Smart Actions:** Phân biệt cử chỉ há mồm nhanh để Click đơn và há mồm lâu để Kéo thả (Drag & Drop).
-- **Physical Hot Corner & Absence Lock:** Tự động khóa chuột (Pause) khi đưa chuột về góc màn hình (0,0) trong 3 giây hoặc khi người dùng rời khỏi camera. Há mồm 3 giây để kích hoạt lại (Resume).
-- Há mồm/lè lưỡi = click 
-- Há mồm 3s = kéo thả, bôi 
+- tính năng phân loại: lúc khởi chạy: nghiêng trái 2s = chế độ cho người bị run ( chuột chậm hơn vì có tính năng chống run). Nghiêng phải 2s = chế độ cho người ko bị run (chuột nhanh hơn)
+- Tính năng adaptive: sau khi chọn chế độ người dùng giữ 1 ví trí cố định (tự chọn) trong 4 giây để xác định tâm và vẽ vùng an toàn (vùng hoạt động) 
+- Há mồm = click
+- Há mồm + giữ 3 giây = bật tính năng cuộn chuột. Trong lúc giữ nguyên trạng thái há mồm người dùng kéo mũi xuống = cuộn xuống, kéo mũi lên = cuộn lên
+- Pause/Resume: 
+(chủ động) kéo mũi lên góc trái trên cùng giữ đó khoảng 3 giây = pause. Há mồm 3s = resume
+(bị động) người dùng biến mất = pause. Xuất hiện lại = resume
 
 ## Yêu cầu hệ thống
 - Python 3.x
