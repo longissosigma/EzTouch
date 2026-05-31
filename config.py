@@ -5,48 +5,45 @@ import pyautogui
 # Kích thước màn hình hệ điều hành
 SCREEN_WIDTH, SCREEN_HEIGHT = pyautogui.size()
 
-# Cấu hình Camera
-CAM_WIDTH, CAM_HEIGHT = 640, 480
+# Cấu hình Camera góc quét rộng vật lý
+CAM_WIDTH, CAM_HEIGHT = 1280, 720
 
-# --- THAM SỐ LỌC NHIỄU NỀN MẶC ĐỊNH ---
+# --- THAM SỐ LỌC NHIỄU NỀN TỐI GIẢN ---
 FILTER_FREQ = 30.0  
-FILTER_MIN_CUTOFF = 0.08  
-FILTER_BETA = 0.12        
+FILTER_MIN_CUTOFF = 0.5   
+FILTER_BETA = 0.20        
 FILTER_D_CUTOFF = 1.0  
 
-# --- Ngưỡng nghiêng đầu để chọn chế độ (Độ) ---
+# Ngưỡng nghiêng đầu để chọn chế độ (Độ)
 ROLL_SELECT_LEFT = -18.0   
 ROLL_SELECT_RIGHT = 18.0   
 SELECT_HOLD_DURATION = 2.0 
 
-# --- THỜI GIAN THEO DÕI CHỐT TÂM MŨI ĐỘNG CHUẨN XÁC ---
-AUTOCENTER_STABLE_DURATION = 4.0  # Mũi đứng im tại một vị trí trong 4 giây sẽ tự động làm tâm
+# Thời gian theo dõi chốt tâm mũi động
+AUTOCENTER_STABLE_DURATION = 4.0  
 
-# --- 🌟 CHẾ ĐỘ HOẠT ĐỘNG ĐỘNG (SẼ TỰ ĐỘNG THAY ĐỔI THEO TỪNG CHẾ ĐỘ) ---
-CURRENT_MODE = "UNDECIDED"      # UNDECIDED, PARKINSON, hoặc REGULAR
-MOUSE_LERP_BASE_ALPHA = 0.35  
-MOUSE_ACCEL_FACTOR = 1.0  
+# --- CHẾ ĐỘ HOẠT ĐỘNG ---
+CURRENT_MODE = "UNDECIDED"      
 
-# --- CẤU HÌNH GESTURE TIMING (GIÂY) ---
-CLICK_MAX_DURATION = 0.40  
-DRAG_MIN_DURATION = 1.2    
+# --- 🌟 TỐI ƯU TIMING: MỞ RỘNG VÙNG THỜI GIAN NHẤP NHẢ ĐỂ CLICK NHẠY HƠN ---
+CLICK_MAX_DURATION = 0.55  # Dưới 0.55 giây nhấp nhả mồm là ăn chắc 1 cú click đơn
+DRAG_MIN_DURATION = 1.3    # Giữ mồm mở liên tục trên 1.3 giây sẽ kích hoạt cuộn chuột
 
 # --- THỜI GIAN QUẢN LÝ TỰ ĐỘNG KHÓA/MỞ ---
 FACE_ABSENCE_DURATION = 2.0  
 HOT_CORNER_DURATION = 3.0    
 RESUME_MOUTH_DURATION = 3.0  
 
-# --- 🌟 VÙNG TƯƠNG TÁC HIỂN THỊ TRÊN CAMERA (SẼ ĐƯỢC TÍNH TOÁN ĐỘNG QUANH TÂM THẬT) ---
+# Vùng an toàn quy chuẩn (0.25) quanh tâm thật
 FRAME_INNER_X1 = 0.25
 FRAME_INNER_X2 = 0.75
 FRAME_INNER_Y1 = 0.25
 FRAME_INNER_Y2 = 0.75
 
-# --- 🌟 BIÊN TOÁN HỌC ẢO TỐI ƯU SIÊU TỐC (CHỐNG MỎI CỔ CHO NGƯỜI KHÔNG RUN) ---
-# Tăng từ 0.09 lên 0.14 cho Regular Mode để thu nhỏ biên độ lắc đầu thực tế của người dùng
-MATH_DEADZONE_REDUCTION = 0.09
+# Biên toán học ảo giúp nhích nhẹ đầu chuột bay hết màn hình
+MATH_DEADZONE_REDUCTION = 0.11
 
-# --- BIẾN TOÀN CỤC ĐƯỢC DÙNG CHO CALIBRATION ĐỘNG ---
+# Biến toàn cục dùng cho Calibration
 DYNAMIC_MOUTH_THRESH = 0.045  
 CALIBRATED_CENTER_X = 0.5
 CALIBRATED_CENTER_Y = 0.5
