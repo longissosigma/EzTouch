@@ -14,3 +14,7 @@
 ## Yêu cầu hệ thống
 - Python 3.x
 - OpenCV, MediaPipe, PyAutoGUI, NumPy
+
+## Cập Nhật Mới
+- camera quét to hơn
+- đã fix độ nhạy của click và di chuyển
