@@ -12,7 +12,16 @@ from filters import DualOneEuroFilter
 from controller import MouseController
 from virtual_keyboard import VirtualKeyboard
 
+RUNNING = True
+
+def stop_system():
+    global RUNNING
+    RUNNING = False
+
 def main():
+    global RUNNING
+    RUNNING = True
+
     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, config.CAM_WIDTH)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, config.CAM_HEIGHT)
@@ -62,7 +71,7 @@ def main():
     widget_w, widget_h = 360, 110
     cv2.moveWindow(widget_name, config.SCREEN_WIDTH - widget_w - 10, (config.SCREEN_HEIGHT - widget_h) // 2)
 
-    while cap.isOpened():
+    while cap.isOpened() and RUNNING:
         success, frame = cap.read()
         if not success: break
         frame = cv2.flip(frame, 1)
