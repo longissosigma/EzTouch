@@ -14,11 +14,11 @@ class MouseController:
         self.is_scroll_mode = False
 
     def move_to_smooth(self, clamped_x, clamped_y):
-        """🌟 PERFECT INERTIAL LOCKING FOR ALL MODES - Đồng bộ thuật toán hàm mũ siêu mượt cho cả 2 chế độ."""
+        """🌟 PERFECT INTERPOLATION MATRIX - Thiết kế bộ lọc chống rung tối tân nhất cho Parkinson và siêu mượt cho Regular."""
         if config.system_state != "RUNNING": 
             return
 
-        # 1. Tính toán ranh giới vùng biên an toàn tối ưu cho cổ thoải mái
+        # 1. Tính toán ranh giới vùng biên an toàn toán học
         boundary_x1 = config.FRAME_INNER_X1 + config.MATH_DEADZONE_REDUCTION
         boundary_x2 = config.FRAME_INNER_X2 - config.MATH_DEADZONE_REDUCTION
         boundary_y1 = config.FRAME_INNER_Y1 + config.MATH_DEADZONE_REDUCTION
@@ -35,27 +35,33 @@ class MouseController:
         target_x = mapped_x * config.SCREEN_WIDTH
         target_y = mapped_y * config.SCREEN_HEIGHT
         
-        # Tính khoảng cách dịch chuyển của chuột để tối ưu Alpha thích ứng
+        # Tính khoảng cách dịch chuyển con trỏ để áp bộ lọc thích ứng
         move_dist = math.hypot(target_x - self.curr_x, target_y - self.curr_y)
         
-        # 3. ĐỒNG BỘ THUẬT TOÁN MA SÁT THÍCH ỨNG HÀM MŨ CHO TẤT CẢ CÁC CHẾ ĐỘ
-        # Dù người dùng chọn Regular hay Parkinson, thuật toán hoàn hảo này đều xử lý trọn gói
-        if move_dist < 18.0:
-            # Khi di chuyển ngắn hoặc giữ im đầu: Áp dụng hàm mũ bậc 2 để ghìm chặt Alpha xuống mức siêu nhỏ.
-            # Chuột sẽ được đổ bê tông khóa cứng tại chỗ, triệt tiêu sạch nhiễu răng cưa của thấu kính camera.
-            adaptive_alpha = (move_dist / 18.0) ** 2 * 0.08
-            adaptive_alpha = max(0.005, adaptive_alpha)  # Giữ mốc ma sát ảo tối thiểu để triệt nhiễu hoàn toàn
+        # 3. TÁCH BIỆT THUẬT TOÁN ĐIỀU KHIỂN ĐỘC LẬP THEO CHẾ ĐỘ
+        if config.CURRENT_MODE == "PARKINSON":
+            # BỘ CHỐNG RUNG PARKINSON SIÊU CẤP (ĐỔ BÊ TÔNG TUYỆT ĐỐI)
+            if move_dist < 35.0:
+                adaptive_alpha = 0.0  # Khóa cứng con trỏ chuột đứng im phăng phắc chống run
+            else:
+                adaptive_alpha = 0.25 + min(0.35, (move_dist - 35.0) / 80.0)
         else:
-            # Khi chủ động quay đầu dứt khoát để di chuyển xa: Phanh ma sát ảo tự động nhả ra,
-            # Alpha tự động phình to tuyến tính (0.45 -> 0.70) dựa theo khoảng cách đuổi bắt.
-            # Chuột sẽ vút đi cực kỳ mượt mà, tốc độ phản xạ tức thì mà không làm mỏi cơ cổ.
-            adaptive_alpha = 0.45 + min(0.25, (move_dist - 18.0) / 60.0)
+            # 🌟 CẢI TIẾN SIÊU MƯỢT CHO REGULAR MODE (Hấp thụ sạch nhiễu răng cưa, tăng quán tính êm dịu)
+            if move_dist < 8.0:
+                # Hạ nhẹ alpha ở cự ly gần để tạo độ êm sướng tay khi nhắm trúng mục tiêu nhỏ
+                adaptive_alpha = 0.15 + (move_dist / 8.0) * 0.15
+            elif move_dist > 60.0:
+                # Tăng tốc độ mượt đuổi bắt dứt khoát khi di chuyển xa rộng màn hình
+                adaptive_alpha = 0.70
+            else:
+                # Vùng điều khiển quán tính trung bình
+                adaptive_alpha = 0.35
             
-        # 4. Thực hiện Lerp cập nhật vị trí nền
+        # 4. Cập nhật vị trí Lerp nền
         self.curr_x = self.curr_x + adaptive_alpha * (target_x - self.curr_x)
         self.curr_y = self.curr_y + adaptive_alpha * (target_y - self.curr_y)
         
-        # Điều khiển chuột thực tế của hệ điều hành
+        # Ra lệnh điều khiển chuột hệ điều hành
         pyautogui.moveTo(int(self.curr_x), int(self.curr_y), duration=0.0)
 
     def execute_click(self):

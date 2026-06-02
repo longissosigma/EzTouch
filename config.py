@@ -13,21 +13,21 @@ FILTER_MIN_CUTOFF = 0.5
 FILTER_BETA = 0.20        
 FILTER_D_CUTOFF = 1.0  
 
-# --- 🌟 CẬP NHẬT: THAM SỐ NGHIÊNG ĐẦU CHỌN CHẾ ĐỘ GIẢM VỀ 3.0 GIÂY ---
+# --- THAM SỐ NGHIÊNG ĐẦU CHỌN CHẾ ĐỘ ---
 ROLL_SELECT_LEFT = -18.0   
 ROLL_SELECT_RIGHT = 18.0   
-SELECT_HOLD_DURATION = 3.0 # Đã sửa từ 3.6s về 3.0s
+SELECT_HOLD_DURATION = 3.0  
 
-# Thời gian theo dõi chốt tâm mũi động trong 3 giây
-AUTOCENTER_STABLE_DURATION = 3.0  
+# 🌟 CẬP NHẬT: Giảm thời gian giữ im đầu để chốt tâm động xuống còn 2.0 giây
+AUTOCENTER_STABLE_DURATION = 2.0  
 
 # --- TÍNH NĂNG BÀN PHÍM ẢO & DWELL CLICK ---
 DWELL_DURATION = 2.0              
 DWELL_PIXEL_RADIUS = 8            
 is_keyboard_open = False          
 
-# Thời gian tích lũy cử chỉ lắc đầu mở phím (3 giây)
-SHAKE_WINDOW_DURATION = 3.0
+# Bán kính hút từ tính ảo của phím
+MAGNET_SNAP_RADIUS = 35           
 
 KEYBOARD_LAYOUT = [
     ["A", "B", "C", "D", "E", "F"],

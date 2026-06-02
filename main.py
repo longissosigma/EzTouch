@@ -72,7 +72,7 @@ def main():
         results = detector.process_frame(frame)
         raw_nose_x, raw_nose_y = detector.get_nose_position(results)
         mouth_ratio = detector.get_mouth_open_ratio(results)
-        head_roll = detector.get_head_roll(results) 
+        head_roll = detector.get_head_roll(results)
 
         current_time = time.time()
 
@@ -92,7 +92,7 @@ def main():
                 
         if config.system_state == "SLEEP":
             widget_frame = np.zeros((widget_h, widget_w, 3), dtype=np.uint8) + 25
-            cv2.putText(widget_frame, "STATE: SLEEP (KHOA MÁY)", (15, 33), cv2.WINDOW_AUTOSIZE, 0.6, (120, 120, 120), 2, cv2.LINE_AA)
+            cv2.putText(widget_frame, "STATE: SLEEP (KHOA MÁY)", (15, 33), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (120, 120, 120), 2, cv2.LINE_AA)
             cv2.putText(widget_frame, "HAY QUAY LAI TRUOC CAM", (15, 65), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
             cv2.imshow(widget_name, widget_frame)
             
@@ -104,9 +104,10 @@ def main():
             continue
 
         widget_countdown_text = ""
+        is_toggling_keyboard = False  # Cờ an toàn chặn gõ lặp gây crash
 
         # ==========================================
-        # 🌟 GIAI ĐOẠN 0: NGHIÊNG ĐẦU CHỌN CHẾ ĐỘ GIẢM VỀ mốc 3.0 GIÂY
+        # GIAI ĐOẠN 0: NGHIÊNG ĐẦU CHỌN CHẾ ĐỘ 3.0 GIÂY
         # ==========================================
         if not is_mode_selected:
             if head_roll is not None:
@@ -172,13 +173,14 @@ def main():
             
             widget_frame = np.zeros((widget_h, widget_w, 3), dtype=np.uint8) + 25
             cv2.putText(widget_frame, "STATE: KHAO SAT", (15, 33), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2, cv2.LINE_AA)
-            cv2.putText(widget_frame, widget_countdown_text if widget_countdown_text else "Nghieng co de chon...", (15, 65), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (255, 255, 255), 1, cv2.LINE_AA)
+            cv2.text_display = widget_countdown_text if widget_countdown_text else "Nghieng co de chon..."
+            cv2.putText(widget_frame, cv2.text_display, (15, 65), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (255, 255, 255), 1, cv2.LINE_AA)
             cv2.imshow(widget_name, widget_frame)
             if cv2.waitKey(1) & 0xFF == ord('q'): break
             continue
 
         # ==========================================
-        # GIAI ĐOẠN 1: AUTO-CENTER TRONG 3 GIÂY
+        # GIAI ĐOẠN 1: AUTO-CENTER TRONG 2 GIÂY CHUẨN XÁC
         # ==========================================
         if not is_calibrated:
             if raw_nose_x is not None and raw_nose_y is not None:
@@ -204,7 +206,7 @@ def main():
                 cv2.putText(frame, "GIU NGOI CO DINH THOAI MAI VA HA MOM MAX TRONG: " + f"{countdown_stable:.1f}s", (w // 2 - 380, h // 2 - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 255), 1, cv2.LINE_AA)
                 
                 cv2.circle(frame, (int(raw_nose_x * w), int(raw_nose_y * h)), 18, (0, 165, 255), 2)
-                cv2.rectangle(overlay, (w // 2 - 200, h // 2 + 30), (w // 2 - 200 + int(elapsed_stable * 133), h // 2 + 45), (0, 255, 127), -1)
+                cv2.rectangle(overlay, (w // 2 - 200, h // 2 + 30), (w // 2 - 200 + int(elapsed_stable * 200), h // 2 + 45), (0, 255, 127), -1)
 
                 if elapsed_stable >= config.AUTOCENTER_STABLE_DURATION:
                     config.CALIBRATED_CENTER_X = last_stable_nose_x
@@ -235,6 +237,7 @@ def main():
         # ==========================================
         if raw_nose_x is not None and raw_nose_y is not None:
             
+            # Logic đóng mở bàn phím ảo bằng cử chỉ phối hợp
             if config.system_state == "RUNNING" and head_roll is not None:
                 if (head_roll > config.ROLL_SELECT_RIGHT) and (mouth_ratio > config.DYNAMIC_MOUTH_THRESH):
                     if not config.is_keyboard_open:
@@ -246,6 +249,7 @@ def main():
                         ui_status_text = f"DANG DE NGHI MO PHIM AO... ({rem_kb:.1f}s)"
                         if elapsed_kb >= 3.6:
                             config.is_keyboard_open = True
+                            is_toggling_keyboard = True  
                             ui_status_text = "DA MO BAN PHIM AO FLOATING CHINH"
                             ui_flash_trigger = 5
                             kb_open_timer = None
@@ -262,6 +266,7 @@ def main():
                         ui_status_text = f"DANG DE NGHI TAT PHIM... ({rem_kb:.1f}s)"
                         if elapsed_kb >= 3.6:
                             config.is_keyboard_open = False
+                            is_toggling_keyboard = True  
                             ui_status_text = "DA TAT BAN PHIM AO"
                             ui_flash_trigger = 5
                             kb_close_timer = None
@@ -285,6 +290,7 @@ def main():
                     resume_mouth_start_time = None
                     ui_status_text = "HE THONG DANG TAM DUNG (PAUSED) - HA MOM 3S DE MO"
 
+            # Luồng gõ Click / Scroll thích ứng tự do
             if config.system_state == "RUNNING":
                 if mouth_ratio > config.DYNAMIC_MOUTH_THRESH:
                     if mouth_open_start_time is None:
@@ -302,15 +308,22 @@ def main():
                                 ui_status_text = "DA GHIM BAN PHIM AO CO DINH"
                                 ui_flash_trigger = 3
                             else:
-                                mouse_controller.execute_click()
-                                ui_status_text = "CLICK CHUOT TRAI TỨC THỜI"
-                                ui_flash_trigger = 3
+                                was_typing = False
+                                if config.is_keyboard_open:
+                                    was_typing = virtual_kb.execute_active_mouth_type()
+                                
+                                # 🌟 VÁ LỖI CRASH: Tuyệt đối không click chuột đè lên màn hình nền nếu vừa phát sinh cử chỉ Mở/Đóng bàn phím
+                                if not was_typing and not is_toggling_keyboard:
+                                    mouse_controller.execute_click()
+                                    ui_status_text = "CLICK CHUOT TRAI TỨC THỜI"
+                                    ui_flash_trigger = 3
                         if mouse_controller.is_scroll_mode:
                             mouse_controller.is_scroll_mode = False
                             ui_status_text = "THOAT CHEDO CUON CHUOT"
                             ui_flash_trigger = 3
                         mouth_open_start_time = None
 
+            # Ánh xạ tọa độ chuột kịch biên an toàn 1:1
             clamped_x = np.clip(raw_nose_x, config.FRAME_INNER_X1, config.FRAME_INNER_X2)
             clamped_y = np.clip(raw_nose_y, config.FRAME_INNER_Y1, config.FRAME_INNER_Y2)
             
@@ -320,6 +333,7 @@ def main():
             if config.system_state == "RUNNING" and mouse_controller.is_scroll_mode and scroll_anchor_y is not None:
                 mouse_controller.execute_scroll(scroll_anchor_y, raw_nose_y)
             
+            # Hot corner vật lý góc (0,0) chuyển sang PAUSED
             if config.system_state == "RUNNING":
                 import pyautogui as pg 
                 current_mouse_x, current_mouse_y = pg.position()
@@ -338,18 +352,20 @@ def main():
                 else:
                     hot_corner_start_time = None
 
+            # Đồ họa tâm xanh lá
             center_pt = (int(clamped_x * w), int(clamped_y * h))
             hud_color = (255, 0, 127) if mouse_controller.is_scroll_mode else ((0, 255, 127) if config.system_state == "RUNNING" else (0, 0, 255))
-            cv2.circle(frame, center_pt, 6, hud_color, -1)     
-            cv2.circle(frame, center_pt, 14, (255, 255, 255), 2) 
+            cv2.circle(frame, center_pt, 6, hud_color, -1)    
+            cv2.circle(frame, center_pt, 14, (255, 255, 255), 2)
             
             real_nose_pt = (int(raw_nose_x * w), int(raw_nose_y * h))
             if real_nose_pt != center_pt:
                 cv2.circle(frame, real_nose_pt, 4, (120, 120, 120), -1)
 
+        # Chạy kiểm tra gõ Dwell-Click phím nổi ngoài đời thực
         virtual_kb.check_dwell_clicking()
 
-        # CẬP NHẬT GIAO DIỆN THANH WIDGET NỔI ĐỘC LẬP
+        # CẬP NHẬT GIAO DIỆN THANH WIDGET NỔI ĐỘC LẬP NGOÀI MÀN HÌNH
         widget_frame = np.zeros((widget_h, widget_w, 3), dtype=np.uint8) + 25
         status_color = (0, 255, 127) if config.system_state == "RUNNING" else ((0, 0, 255) if config.system_state == "PAUSED" else (120, 120, 120))
             

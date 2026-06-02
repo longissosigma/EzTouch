@@ -4,6 +4,7 @@ import time
 import pyautogui
 import numpy as np
 import config
+import math
 
 class VirtualKeyboard:
     def __init__(self):
@@ -11,45 +12,46 @@ class VirtualKeyboard:
         self.kb_w = 1100
         self.kb_h = 420
         
-        # 🌟 YÊU CẦU 3: Thiết lập vị trí xuất hiện BAN ĐẦU nằm ở CHÍNH GIỮA màn hình máy tính
+        # Thiết lập vị trí xuất hiện ban đầu nằm ở chính giữa màn hình máy tính
         self.kb_x = (config.SCREEN_WIDTH - self.kb_w) // 2
         self.kb_y = (config.SCREEN_HEIGHT - self.kb_h) // 2
         
         self.last_mouse_pos = (0, 0)
         self.dwell_start_time = None
+        
+        # Quản lý ô đang hover tĩnh theo hàng và cột để chống nhiễu run
+        self.last_hovered_cell = (-1, -1)
         self.current_hovered_key = None
         self.progress_pct = 0.0
         
         self.window_name = "FacileTouch Virtual Keyboard"
         
-        # Cấu hình khởi tạo cửa sổ tĩnh chống lag
-        cv2.namedWindow(self.window_name, cv2.WINDOW_AUTOSIZE)
+        # Khởi tạo cửa sổ dạng NORMAL linh hoạt để hệ điều hành cấp phát bộ nhớ Canvas trước
+        cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
         cv2.setWindowProperty(self.window_name, cv2.WND_PROP_TOPMOST, 1)
-        # Tạm giấu ra ngoài vùng nhìn thấy lúc khởi chạy
-        cv2.moveWindow(self.window_name, -2000, -2000)
+        # Thu nhỏ cửa sổ ẩn kích thước về 1x1 pixel tránh rác màn hình lúc đầu
+        cv2.resizeWindow(self.window_name, 1, 1)
+        cv2.moveWindow(self.window_name, 0, 0)
         
         self.is_visible = False
         self.is_dragging_mode = False
-        
-        # Bộ nhớ theo dõi tọa độ thực tế tránh gọi trùng lặp hàm moveWindow gây lag chuột
-        self.last_sent_x = -2000
-        self.last_sent_y = -2000
 
     def check_dwell_clicking(self):
-        """Kiểm tra cơ chế đứng im 2.0 giây để gõ phím hoặc di chuyển bàn phím ảo."""
+        """Kiểm tra cơ chế gõ phím bị động găm theo ô chữ độc lập (Đã loại bỏ hoàn toàn lực hút nam châm)."""
         if not config.is_keyboard_open or config.system_state != "RUNNING":
             self.dwell_start_time = None
             self.is_dragging_mode = False
+            self.last_hovered_cell = (-1, -1)
+            self.current_hovered_key = None
             if self.is_visible:
-                cv2.moveWindow(self.window_name, -2000, -2000)
-                self.last_sent_x, self.last_sent_y = -2000, -2000
+                cv2.resizeWindow(self.window_name, 1, 1)
+                cv2.moveWindow(self.window_name, 0, 0)
                 self.is_visible = False
             return
 
-        # 🌟 TỐI ƯU CHỐNG LAG: Chỉ gọi moveWindow khi chuyển trạng thái hiển thị
         if not self.is_visible:
+            cv2.resizeWindow(self.window_name, self.kb_w, self.kb_h)
             cv2.moveWindow(self.window_name, self.kb_x, self.kb_y)
-            self.last_sent_x, self.last_sent_y = self.kb_x, self.kb_y
             self.is_visible = True
 
         mx, my = pyautogui.position()
@@ -62,31 +64,25 @@ class VirtualKeyboard:
             self.kb_x = max(0, min(new_x, config.SCREEN_WIDTH - self.kb_w))
             self.kb_y = max(0, min(new_y, config.SCREEN_HEIGHT - self.kb_h))
             
-            # 🌟 TỐI ƯU CHỐNG LAG: Chỉ đẩy lệnh di chuyển lên HĐH nếu tọa độ thực sự thay đổi khác biệt
-            if self.kb_x != self.last_sent_x or self.kb_y != self.last_sent_y:
-                cv2.moveWindow(self.window_name, self.kb_x, self.kb_y)
-                self.last_sent_x, self.last_sent_y = self.kb_x, self.kb_y
-                
+            cv2.moveWindow(self.window_name, self.kb_x, self.kb_y)
             self.draw_standalone_keyboard()
             return
 
-        # 🌟 YÊU CẦU 4: SỬA LỖI HOVER LỆCH Ô - Lấy tọa độ vùng làm việc thực tế (Client Area) 
-        # Trích xuất chính xác để bù trừ độ dày của thanh tiêu đề Title Bar và Borders hệ điều hành
+        # Trích xuất chính xác tọa độ làm việc
         try:
             win_rect = cv2.getWindowImageRect(self.window_name)
             client_x, client_y, client_w, client_h = win_rect
         except:
             client_x, client_y, client_w, client_h = self.kb_x, self.kb_y, self.kb_w, self.kb_h
 
-        # Kiểm tra xem con trỏ chuột thực tế có nằm chính xác trong lòng vùng phím vẽ hay không
         if not (client_x <= mx <= client_x + client_w and client_y <= my <= client_y + client_h):
             self.dwell_start_time = None
             self.current_hovered_key = None
+            self.last_hovered_cell = (-1, -1)
             self.progress_pct = 0.0
             self.draw_standalone_keyboard()
             return
 
-        # Tính toán phần trăm tọa độ tương đối đã loại bỏ hoàn toàn sai số viền cửa sổ
         rel_x = mx - client_x
         rel_y = my - client_y
         
@@ -99,10 +95,14 @@ class VirtualKeyboard:
         row_idx = min(rel_y // cell_h, rows - 1)
         hovered_key = config.KEYBOARD_LAYOUT[row_idx][col_idx]
 
-        dist = cv2.norm(np.array([mx, my]) - np.array(self.last_mouse_pos))
-        
-        if dist > config.DWELL_PIXEL_RADIUS or hovered_key != self.current_hovered_key:
+        # 🌟 ĐÃ XÓA BỎ TOÀN BỘ CƠ CHẾ TỰ ĐỘNG HÚT CHUỘT VÀO TÂM TẠI ĐÂY THEO YÊU CẦU
+        # Người dùng hoàn toàn tự giữ vị trí con trỏ chuột của mình một cách chủ động.
+
+        # KHÓA ĐẾM NGƯỢC THEO CHỈ SỐ Ô (ROW, COL) - YÊU CẦU CŨ ĐƯỢC BẢO TOÀN
+        current_cell = (row_idx, col_idx)
+        if current_cell != self.last_hovered_cell:
             self.dwell_start_time = current_time
+            self.last_hovered_cell = current_cell
             self.current_hovered_key = hovered_key
             self.progress_pct = 0.0
         else:
@@ -122,8 +122,19 @@ class VirtualKeyboard:
         self.last_mouse_pos = (mx, my)
         self.draw_standalone_keyboard()
 
+    def execute_active_mouth_type(self):
+        """CHỦ ĐỘNG HÁ MỒM GÕ PHÍM - Phát tín hiệu gõ chữ dứt khoát ngay lập tức."""
+        if config.is_keyboard_open and self.current_hovered_key and not self.is_dragging_mode:
+            if self.current_hovered_key == "MOVE":
+                self.is_dragging_mode = True
+            else:
+                self.trigger_key_press(self.current_hovered_key)
+            self.dwell_start_time = time.time()
+            self.progress_pct = 0.0
+            return True
+        return False
+
     def trigger_key_press(self, key_text):
-        """Giả lập gõ phím xuống Windows."""
         if key_text == "CLOSE":
             config.is_keyboard_open = False
         elif key_text == "SPACE":
@@ -136,7 +147,6 @@ class VirtualKeyboard:
             pyautogui.press(key_text.lower())
 
     def draw_standalone_keyboard(self):
-        """Vẽ giao diện bàn phím lên cửa sổ nổi riêng biệt."""
         if not config.is_keyboard_open or not self.is_visible: return
 
         kb_frame = np.zeros((self.kb_h, self.kb_w, 3), dtype=np.uint8) + 20
