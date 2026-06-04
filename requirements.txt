@@ -1,0 +1,7 @@
+# Danh sách thư viện cần cài đặt
+
+opencv-python
+mediapipe
+pyautogui
+numpy
+PySide6
