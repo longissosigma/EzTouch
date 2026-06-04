@@ -305,6 +305,7 @@ class EzTouchApp(QWidget):
                 self.face_thread.start()
                 self.is_engine_running = True
                 self.update_button_style()
+                self.setWindowState(Qt.WindowMinimized)
         else:
             if self.face_thread and self.face_thread.isRunning():
                 main.stop_system()

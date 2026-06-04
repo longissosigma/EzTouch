@@ -24,14 +24,9 @@ class VirtualKeyboard:
         # 🔥 ĐỔI TÊN THÀNH EZTOUCH
         self.window_name = "EzTouch Virtual Keyboard"
         
-        cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
-        cv2.setWindowProperty(self.window_name, cv2.WND_PROP_TOPMOST, 1)
-        cv2.resizeWindow(self.window_name, 1, 1)
-        cv2.moveWindow(self.window_name, 0, 0)
-        
         self.is_visible = False
         self.is_dragging_mode = False
-        self.is_window_created = True
+        self.is_window_created = False
 
     def check_dwell_clicking(self):
         """Kiểm tra cơ chế gõ phím bị động găm theo ô chữ độc lập."""
@@ -45,6 +40,14 @@ class VirtualKeyboard:
                 cv2.moveWindow(self.window_name, 0, 0)
                 self.is_visible = False
             return
+
+        if not self.is_window_created:
+            cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL | cv2.WINDOW_FREERATIO)
+            cv2.resizeWindow(self.window_name, 1, 1)
+            cv2.moveWindow(self.window_name, 0, 0)
+            self.is_window_created = True
+
+
 
         if not self.is_visible:
             cv2.resizeWindow(self.window_name, self.kb_w, self.kb_h)
