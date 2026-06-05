@@ -10,48 +10,44 @@ class VirtualKeyboard:
     def __init__(self):
         self.kb_w = 1100
         self.kb_h = 420
-        
         self.kb_x = (config.SCREEN_WIDTH - self.kb_w) // 2
         self.kb_y = (config.SCREEN_HEIGHT - self.kb_h) // 2
-        
         self.last_mouse_pos = (0, 0)
         self.dwell_start_time = None
-        
         self.last_hovered_cell = (-1, -1)
         self.current_hovered_key = None
         self.progress_pct = 0.0
-        
-        # 🔥 ĐỔI TÊN THÀNH EZTOUCH
         self.window_name = "EzTouch Virtual Keyboard"
-        
         self.is_visible = False
         self.is_dragging_mode = False
         self.is_window_created = False
 
     def check_dwell_clicking(self):
-        """Kiểm tra cơ chế gõ phím bị động găm theo ô chữ độc lập."""
         if not config.is_keyboard_open or config.system_state != "RUNNING":
             self.dwell_start_time = None
             self.is_dragging_mode = False
             self.last_hovered_cell = (-1, -1)
             self.current_hovered_key = None
             if self.is_visible:
-                cv2.resizeWindow(self.window_name, 1, 1)
-                cv2.moveWindow(self.window_name, 0, 0)
+                try:
+                    cv2.resizeWindow(self.window_name, 1, 1)
+                    cv2.moveWindow(self.window_name, 0, 0)
+                except:
+                    pass
                 self.is_visible = False
             return
 
         if not self.is_window_created:
             cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL | cv2.WINDOW_FREERATIO)
+            cv2.setWindowProperty(self.window_name, cv2.WND_PROP_TOPMOST, 1)
             cv2.resizeWindow(self.window_name, 1, 1)
             cv2.moveWindow(self.window_name, 0, 0)
             self.is_window_created = True
 
-
-
         if not self.is_visible:
             cv2.resizeWindow(self.window_name, self.kb_w, self.kb_h)
             cv2.moveWindow(self.window_name, self.kb_x, self.kb_y)
+            cv2.setWindowProperty(self.window_name, cv2.WND_PROP_TOPMOST, 1)
             self.is_visible = True
 
         mx, my = pyautogui.position()
@@ -62,7 +58,6 @@ class VirtualKeyboard:
             new_y = int(my - self.kb_h // 2)
             self.kb_x = max(0, min(new_x, config.SCREEN_WIDTH - self.kb_w))
             self.kb_y = max(0, min(new_y, config.SCREEN_HEIGHT - self.kb_h))
-            
             cv2.moveWindow(self.window_name, self.kb_x, self.kb_y)
             self.draw_standalone_keyboard()
             return
@@ -178,6 +173,3 @@ class VirtualKeyboard:
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, text_color, 2, cv2.LINE_AA)
 
         cv2.imshow(self.window_name, kb_frame)
-
-    def draw_overlay(self, frame):
-        pass
