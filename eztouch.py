@@ -11,29 +11,54 @@ from PySide6.QtGui import QColor, QFont
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 
-import main
-import config
+from core import main
+from core import config
 
 class FaceThread(QThread):
     def run(self):
         main.main()  
 
+# 🌟 BỘ CSS NÂNG CAO CHO HỆ THỐNG NÚT BẤM VẬT LÝ SỐNG ĐỘNG (Tactile Click & Micro-interactions)
 STYLE_BLUE_BUTTON = """
     QPushButton {
-        background-color: #3182CE; color: white; font-size: 16px; font-weight: bold;
-        border: none; border-radius: 14px; padding: 14px;
+        background-color: #3182CE; color: white; font-size: 18px; font-weight: bold;
+        border: 2px solid #2B6CB0; border-radius: 16px; padding: 14px;
     }
-    QPushButton:hover { background-color: #4299E1; margin-top: -2px; margin-bottom: 2px; }
-    QPushButton:pressed { background-color: #2B6CB0; margin-top: 0px; margin-bottom: 0px; }
+    QPushButton:hover { 
+        background-color: #4299E1; border-color: #3182CE; margin-top: -2px; margin-bottom: 2px;
+    }
+    QPushButton:pressed { 
+        background-color: #2B6CB0; border-color: #1A365D; margin-top: 2px; margin-bottom: -2px;
+    }
 """
 
 STYLE_ORANGE_BUTTON = """
     QPushButton {
         background-color: #ED8936; color: white; font-size: 18px; font-weight: bold;
-        border: none; border-radius: 14px; padding: 14px;
+        border: 2px solid #DD6B20; border-radius: 16px; padding: 14px;
     }
-    QPushButton:hover { background-color: #F6AD55; margin-top: -2px; margin-bottom: 2px; }
-    QPushButton:pressed { background-color: #DD6B20; margin-top: 0px; margin-bottom: 0px; }
+    QPushButton:hover { 
+        background-color: #F6AD55; border-color: #ED8936; margin-top: -2px; margin-bottom: 2px;
+    }
+    QPushButton:pressed { 
+        background-color: #DD6B20; border-color: #9C4221; margin-top: 2px; margin-bottom: -2px;
+    }
+"""
+
+STYLE_TOOLBAR_PAUSE = """
+    QPushButton {
+        background-color: #E53E3E; color: white; font-size: 16px; font-weight: bold; border-radius: 20px; border: 2px solid #C53030;
+    }
+    QPushButton:hover { background-color: #FC8181; margin-top: -2px; margin-bottom: 2px; }
+    QPushButton:pressed { background-color: #C53030; margin-top: 2px; margin-bottom: -2px; }
+"""
+
+STYLE_TOOLBAR_RESUME = """
+    QPushButton {
+        background-color: #3182CE; color: white; font-size: 16px; font-weight: bold; border-radius: 20px; border: 2px solid #2B6CB0;
+    }
+    QPushButton:hover { background-color: #4299E1; margin-top: -2px; margin-bottom: 2px; }
+    QPushButton:pressed { background-color: #2B6CB0; margin-top: 2px; margin-bottom: -2px; }
 """
 
 class EzTouchTrialSpace(QWidget):
@@ -46,8 +71,7 @@ class EzTouchTrialSpace(QWidget):
         
         self.setStyleSheet("""
             QWidget {
-                background-color: #EDF2F7;
-                color: #2D3748;
+                background-color: #EDF2F7; color: #2D3748;
                 font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
             }
             QLabel { background: transparent; }
@@ -69,6 +93,17 @@ class EzTouchTrialSpace(QWidget):
         self.header_label.setAlignment(Qt.AlignCenter)
         self.header_label.setStyleSheet("font-size: 26px; font-weight: 900; color: #2B6CB0; letter-spacing: 1.5px;")
         self.layout.addWidget(self.header_label)
+
+        # 🌟 THANH TIẾN TRÌNH TỔNG QUAN (Zeigarnik Effect)
+        self.overall_progress = QProgressBar()
+        self.overall_progress.setRange(0, 100)
+        self.overall_progress.setValue(0)
+        self.overall_progress.setFixedHeight(20)
+        self.overall_progress.setStyleSheet("""
+            QProgressBar { background-color: #CBD5E0; border-radius: 10px; text-align: center; font-weight: bold; color: #1A202C; }
+            QProgressBar::chunk { background-color: #48BB78; border-radius: 10px; }
+        """)
+        self.layout.addWidget(self.overall_progress)
         
         self.stack = QStackedWidget()
         self.layout.addWidget(self.stack)
@@ -82,10 +117,7 @@ class EzTouchTrialSpace(QWidget):
         
         self.btn_exit_trial = QPushButton("Thoát Thử Nghiệm (Quit Trial)")
         self.btn_exit_trial.setFixedWidth(220)
-        self.btn_exit_trial.setStyleSheet("""
-            QPushButton { background-color: #4A5568; color: white; border-radius: 10px; padding: 10px; font-weight: 600; border: none; }
-            QPushButton:hover { background-color: #718096; }
-        """)
+        self.btn_exit_trial.setStyleSheet(STYLE_BLUE_BUTTON.replace("padding: 14px;", "padding: 8px; font-size: 14px;"))
         self.btn_exit_trial.clicked.connect(self.exit_trial)
         self.layout.addWidget(self.btn_exit_trial, alignment=Qt.AlignRight)
 
@@ -185,10 +217,7 @@ class EzTouchTrialSpace(QWidget):
         
         self.target_btn = QPushButton("BẤM VÀO TỚ\n(HÁ MỒM)")
         self.target_btn.setFixedSize(180, 100)
-        self.target_btn.setStyleSheet("""
-            QPushButton { background-color: #ED8936; color: white; border-radius: 20px; font-size: 15px; font-weight: bold; border: none; }
-            QPushButton:hover { background-color: #F6AD55; }
-        """)
+        self.target_btn.setStyleSheet(STYLE_ORANGE_BUTTON)
         self.target_btn.clicked.connect(self.handle_task1_success)
         area_layout.addWidget(self.target_btn, alignment=Qt.AlignRight | Qt.AlignBottom)
         
@@ -220,7 +249,7 @@ class EzTouchTrialSpace(QWidget):
         self.news_text.setReadOnly(True)
         self.news_text.setFont(QFont("Segoe UI", 12))
         self.news_text.setPlainText(
-            "[BÁO CÁO KHOA HỌC] - ỨNG DỤNG MÔ HÌNH TOÁN HỌC TRONG TRỢ NĂNG SỐ 2026\n\n" +
+            "Há mồm trong 2 giây để bật tính năng cuộn trang - sau đó ngửa lên và cúi xuống để di chuyển\n\n" +
             "Nghiên cứu chỉ ra rằng việc tương tác không tiếp xúc hỗ trợ bệnh nhân Parkinson phục hồi chức năng hành vi phản xạ rất tốt.\n" +
             "Hệ thống định vị mốc nhân trắc học khuôn mặt cho phép bắt chuẩn xác chuyển động đỉnh mũi...\n" +
             "Để đọc thêm thông tin chi tiết, người dùng cần học cách cuộn trang mà không dùng tay.\n" +
@@ -233,6 +262,7 @@ class EzTouchTrialSpace(QWidget):
         self.btn_next2.setFixedWidth(280)
         self.btn_next2.setStyleSheet(STYLE_BLUE_BUTTON)
         self.btn_next2.hide()
+        # 🌟 FIX CHUẨN: Thay đổi index từ (2) thành (3) để nhảy chính xác sang màn Task 3
         self.btn_next2.clicked.connect(lambda: self.go_to_stage(3))
         
         layout.addWidget(self.lbl_guide2)
@@ -280,22 +310,22 @@ class EzTouchTrialSpace(QWidget):
         layout.setAlignment(Qt.AlignCenter)
         
         self.lbl_guide4 = QLabel("Task 4: CƠ CHẾ NGHỈ NGƠI TẠM DỪNG (PAUSE/RESUME)")
-        self.lbl_guide4.setStyleSheet("font-size: 22px; font-weight: 700; color: #2B6CB0;")
-        self.lbl_guide4.setAlignment(Qt.AlignCenter)
+        self.lbl_guide4.setStyleSheet("font-size: 22px; font-weight: 700; color: #2B6CB0; letter-spacing: 1.5px;")
+        self.layout.addWidget(self.lbl_guide4)
         
         self.lbl_sub_guide4 = QLabel("Khi bạn muốn nghỉ ngơi hãy ấn vào nút 'PAUSE' màu đỏ trên thanh công cụ dọc góc trái nhé!")
         self.lbl_sub_guide4.setStyleSheet("font-size: 18px; color: #E53E3E; font-weight: bold; margin: 30px;")
-        self.lbl_sub_guide4.setAlignment(Qt.AlignCenter)
         
-        self.btn_next4 = QPushButton("HOÀN THÀNH TOÀN BỘ HÀNH TRÌNH ▶")
-        self.btn_next4.setFixedWidth(320)
+        # 🌟 SỬA CHÍNH XÁC DÒNG NÀY: Điền lại chữ "HOÀN THÀNH" đầy đủ
+        self.btn_next4 = QPushButton("HOÀN THÀNH HÀNH TRÌNH ▶")
+        self.btn_next4.setFixedWidth(360) # Tăng nhẹ chiều rộng lên 360 để text không bị tràn viền nút
         self.btn_next4.setStyleSheet(STYLE_BLUE_BUTTON)
         self.btn_next4.hide()
         self.btn_next4.clicked.connect(lambda: self.go_to_stage(5))
         
         layout.addWidget(self.lbl_guide4)
         layout.addWidget(self.lbl_sub_guide4)
-        layout.addWidget(self.btn_next4, alignment=Qt.AlignCenter)
+        layout.addWidget(self.btn_next4, alignment=Qt.AlignHCenter)
         self.stack.addWidget(page)
 
     def setup_page_finish(self):
@@ -303,7 +333,7 @@ class EzTouchTrialSpace(QWidget):
         layout = QVBoxLayout(page)
         layout.setAlignment(Qt.AlignCenter)
         
-        lbl_congrat = QLabel("🎉 CHÚC MỪNG BẠN NHÉEE! 🎉")
+        lbl_congrat = QLabel("🎉 XUẤT SẮC HOÀN THÀNH TRIAL! 🎉")
         lbl_congrat.setStyleSheet("font-size: 36px; font-weight: 900; color: #38A169;")
         
         lbl_content = QLabel(
@@ -327,6 +357,7 @@ class EzTouchTrialSpace(QWidget):
     def go_to_stage(self, stage_idx):
         config.trial_task_stage = stage_idx
         self.stack.setCurrentIndex(stage_idx)
+        self.overall_progress.setValue(stage_idx * 20)
         if stage_idx != 3:
             config.is_keyboard_open = False
 
@@ -343,13 +374,12 @@ class EzTouchTrialSpace(QWidget):
     def handle_chat_input_focused(self):
         if config.trial_task_stage == 3 and not self.chat_input.clicked_connect_flag:
             self.chat_input.clicked_connect_flag = True
-            self.lbl_sub_guide3.setText("Tuyệt vời! Bây giờ hãy nhìn sang thanh công cụ dọc, NHẤP VÀO NÚT 'KB ON' để mở bàn phím ảo lên.")
+            self.lbl_sub_guide3.setText("Tuyệt vời! Bây giờ hãy nhìn sang thanh công cụ dọc, NHẤP VÀO NÚT '⌨ ON' để mở bàn phím ảo.")
             self.lbl_sub_guide3.setStyleSheet("font-size: 16px; color: #ED8936; font-weight: bold;")
 
     def monitor_user_actions(self):
         if not config.is_trial_active: return
         
-        # --- Realtime Monitor Stage 0 ---
         if config.trial_task_stage == 0:
             self.progress_bar.setValue(config.trial_countdown_pct)
             if config.CURRENT_MODE == "UNDECIDED":
@@ -359,13 +389,12 @@ class EzTouchTrialSpace(QWidget):
                 self.lbl_calib_status.setText(f"Đã kích hoạt chế độ: {mode_name}.\nBây giờ, hãy GIỮ YÊN VỊ TRÍ NHÌN THOẢI MÁI ĐỂ THIẾT LẬP TÂM AN TOÀN.")
                 self.lbl_countdown.setText("⏱️ Đang đồng bộ và định vị vùng an toàn...")
             else:
-                self.lbl_calib_status.setText("🎉 Thiết lập không gian sinh học thành công! Hệ thống đã tự điều chỉnh theo thể trạng của bạn.")
+                self.lbl_calib_status.setText("🎉 Thiết lập không gian sinh học thành công! Giao diện đã tự điều chỉnh hoàn tất.")
                 self.lbl_calib_status.setStyleSheet("font-size: 15px; color: #38A169; font-weight: bold; line-height: 140%; border: none;")
                 self.lbl_countdown.setText("✅ Không gian sinh học đã sẵn sàng 100%!")
                 self.btn_start_onboarding.setEnabled(True)
                 self.btn_start_onboarding.setStyleSheet(STYLE_BLUE_BUTTON)
 
-        # --- Realtime Monitor Task 1 ---
         elif config.trial_task_stage == 1 and self.target_btn.isVisible():
             btn_pos = self.target_btn.mapToGlobal(self.target_btn.rect().topLeft())
             import pyautogui
@@ -382,11 +411,10 @@ class EzTouchTrialSpace(QWidget):
                     self.lbl_sub_guide1.setText("Bạn hãy di chuyển mũi sao cho con trỏ chuột di chuyển đến cái nút to màu cam ở góc màn hình.")
                     self.lbl_sub_guide1.setStyleSheet("font-size: 16px; color: #4A5568;")
                 
-        # --- Realtime Monitor Task 2 ---
         elif config.trial_task_stage == 2 and not self.btn_next2.isVisible():
             if self.main_app.is_engine_running:
                 if config.system_state == "RUNNING":
-                    self.lbl_sub_guide2.setText("Đã bật tính năng cuộn chuột, giờ hãy cúi đầu xuống để cuộn xuống và ngửa lên để cuộn lên.")
+                    self.lbl_sub_guide2.setText("Há mồm trong 1.5 giây để bật tính năng cuộn chuột, sau đó hãy cúi đầu xuống để cuộn xuống và ngửa lên để cuộn lên.")
                     self.lbl_sub_guide2.setStyleSheet("font-size: 16px; color: #3182CE; font-weight: bold;")
             
             scroll_bar = self.news_text.verticalScrollBar()
@@ -395,25 +423,23 @@ class EzTouchTrialSpace(QWidget):
                 self.lbl_sub_guide2.setStyleSheet("font-size: 16px; color: #38A169; font-weight: bold;")
                 self.btn_next2.show()
                 
-        # --- Realtime Monitor Task 3 ---
         elif config.trial_task_stage == 3:
             self.chat_input.setFocus()
             if config.is_keyboard_open and "HÃY DI CHUYỂN" not in self.lbl_sub_guide3.text().upper():
                 self.lbl_sub_guide3.setText("Bàn phím đã mở! Hãy di chuyển mũi vào ô chữ bất kỳ trên bàn phím ảo và giữ đó 2 giây hoặc há mồm để nhấp.")
                 self.lbl_sub_guide3.setStyleSheet("font-size: 15px; color: #2B6CB0; font-weight: bold;")
             if len(self.chat_input.text()) >= 3 and config.is_keyboard_open:
-                self.lbl_sub_guide3.setText("Quá đỉnh! Giờ hãy ấn lại nút 'KB OFF' trên thanh công cụ dọc để tắt bàn phím ảo đi (Nút màu cam đậm).")
+                self.lbl_sub_guide3.setText("Quá đỉnh! Giờ hãy ấn lại nút '⌨ OFF' ở thanh công cụ để tắt bàn phím ảo.")
                 self.lbl_sub_guide3.setStyleSheet("font-size: 16px; color: #E53E3E; font-weight: bold;")
             if len(self.chat_input.text()) >= 3 and not config.is_keyboard_open:
                 self.lbl_sub_guide3.setText("Hoàn hảo! Bạn đã tắt bàn phím ảo thành công.")
                 self.lbl_sub_guide3.setStyleSheet("font-size: 16px; color: #38A169; font-weight: bold;")
                 self.btn_next3.show()
 
-        # --- Realtime Monitor Task 4 ---
         elif config.trial_task_stage == 4 and not self.btn_next4.isVisible():
             if config.system_state == "PAUSED":
                 self.has_triggered_pause = True  
-                self.lbl_sub_guide4.setText("Tốt lắm! Giờ bạn hãy thực hành quay lại bằng cách nhấn nút 'RESUME' màu xanh trên thanh công cụ hoặc há mồm trong 3 giây.")
+                self.lbl_sub_guide4.setText("Tốt lắm! Giờ bạn hãy thực hành quay lại bằng cách nhấn nút 'RESUME' màu xanh trên thanh công cụ.")
                 self.lbl_sub_guide4.setStyleSheet("font-size: 16px; color: #3182CE; font-weight: bold;")
             
             elif config.system_state == "RUNNING" and self.has_triggered_pause:
@@ -439,9 +465,9 @@ class EzTouchTrialSpace(QWidget):
         config.is_trial_active = False
         event.accept()
 
-# =========================================================
-# 🌟 THANH CÔNG CỤ DỌC TRỢ NĂNG (ACCESSIBILITY TOOLBAR)
-# =========================================================
+# =========================================================================
+# 🌟 THANH CÔNG CỤ DỌC TOÀN NĂNG (FITT'S LAW MIDDLE-LEFT EDGE DESTINATION)
+# =========================================================================
 class EzTouchSideToolbar(QWidget):
     def __init__(self, main_app):
         super().__init__()
@@ -458,9 +484,9 @@ class EzTouchSideToolbar(QWidget):
         self.outer_layout.setSpacing(0)
         
         self.toolbar_body = QWidget()
-        self.toolbar_body.setFixedWidth(90)
+        self.toolbar_body.setFixedWidth(124) 
         self.toolbar_body.setStyleSheet(
-            "QWidget { background-color: #F3F6FA; border: 2px solid #3182CE; border-top-right-radius: 18px; border-bottom-right-radius: 18px; }"
+            "QWidget { background-color: #F3F6FA; border: 3px solid #3182CE; border-top-right-radius: 20px; border-bottom-right-radius: 20px; }"
         )
         
         body_layout = QVBoxLayout(self.toolbar_body)
@@ -468,12 +494,12 @@ class EzTouchSideToolbar(QWidget):
         body_layout.setSpacing(15)
         
         self.btn_toggle_pause = QPushButton()
-        self.btn_toggle_pause.setFixedSize(76, 76) 
+        self.btn_toggle_pause.setFixedSize(110, 110) 
         self.btn_toggle_pause.setCursor(Qt.PointingHandCursor)
         self.btn_toggle_pause.clicked.connect(self.handle_pause_click)
         
         self.btn_toggle_keyboard = QPushButton()
-        self.btn_toggle_keyboard.setFixedSize(76, 76) 
+        self.btn_toggle_keyboard.setFixedSize(110, 110) 
         self.btn_toggle_keyboard.setCursor(Qt.PointingHandCursor)
         self.btn_toggle_keyboard.clicked.connect(self.handle_keyboard_click)
         
@@ -481,7 +507,7 @@ class EzTouchSideToolbar(QWidget):
         body_layout.addWidget(self.btn_toggle_keyboard)
         
         self.btn_slide_handle = QPushButton("◀")
-        self.btn_slide_handle.setFixedSize(22, 70)
+        self.btn_slide_handle.setFixedSize(22, 100)
         self.btn_slide_handle.setCursor(Qt.PointingHandCursor)
         self.btn_slide_handle.setStyleSheet(
             "QPushButton { background-color: #3182CE; color: #FFFFFF; border: none; border-top-right-radius: 10px; border-bottom-right-radius: 10px; font-weight: bold; font-size: 12px; }"
@@ -501,8 +527,8 @@ class EzTouchSideToolbar(QWidget):
         self.update_button_styles()
 
     def update_position(self):
-        total_w = 112 if self.is_expanded else 22
-        total_h = 210
+        total_w = 146 if self.is_expanded else 22
+        total_h = 280
         pos_x = 0
         pos_y = (config.SCREEN_HEIGHT - total_h) // 2
         self.setGeometry(pos_x, pos_y, total_w, total_h)
@@ -510,28 +536,24 @@ class EzTouchSideToolbar(QWidget):
     def update_button_styles(self):
         if config.system_state == "PAUSED":
             self.btn_toggle_pause.setText("RESUME")
-            self.btn_toggle_pause.setStyleSheet(
-                "QPushButton { background-color: #3182CE; color: white; font-size: 12px; font-weight: bold; border-radius: 16px; border: none; }"
-                "QPushButton:hover { background-color: #4299E1; margin-top: -2px; }"
-            )
+            self.btn_toggle_pause.setStyleSheet(STYLE_TOOLBAR_RESUME)
         else:
             self.btn_toggle_pause.setText("PAUSE")
-            self.btn_toggle_pause.setStyleSheet(
-                "QPushButton { background-color: #E53E3E; color: white; font-size: 12px; font-weight: bold; border-radius: 16px; border: none; }"
-                "QPushButton:hover { background-color: #FC8181; margin-top: -2px; }"
-            )
+            self.btn_toggle_pause.setStyleSheet(STYLE_TOOLBAR_PAUSE)
             
         if not config.is_keyboard_open:
-            self.btn_toggle_keyboard.setText("KB ON")
+            self.btn_toggle_keyboard.setText("⌨ ON")
             self.btn_toggle_keyboard.setStyleSheet(
-                "QPushButton { background-color: #4A5568; color: white; font-size: 12px; font-weight: bold; border-radius: 16px; border: none; }"
-                "QPushButton:hover { background-color: #718096; margin-top: -2px; }"
+                "QPushButton { background-color: #4A5568; color: white; font-size: 16px; font-weight: bold; border-radius: 16px; border: 2px solid #2D3748; }"
+                "QPushButton:hover { background-color: #718096; margin-top: -2px; margin-bottom: 2px; }"
+                "QPushButton:pressed { background-color: #2D3748; margin-top: 2px; margin-bottom: -2px; }"
             )
         else:
-            self.btn_toggle_keyboard.setText("KB OFF")
+            self.btn_toggle_keyboard.setText("⌨ OFF")
             self.btn_toggle_keyboard.setStyleSheet(
-                "QPushButton { background-color: #ED8936; color: white; font-size: 12px; font-weight: bold; border-radius: 16px; border: none; }"
-                "QPushButton:hover { background-color: #F6AD55; margin-top: -2px; }"
+                "QPushButton { background-color: #ED8936; color: white; font-size: 16px; font-weight: bold; border-radius: 16px; border: 2px solid #DD6B20; }"
+                "QPushButton:hover { background-color: #F6AD55; margin-top: -2px; margin-bottom: 2px; }"
+                "QPushButton:pressed { background-color: #DD6B20; margin-top: 2px; margin-bottom: -2px; }"
             )
 
     def handle_pause_click(self):
@@ -559,9 +581,6 @@ class EzTouchSideToolbar(QWidget):
             self.btn_slide_handle.setText("▶")
         self.update_position()
 
-# =========================================================
-# TAB KHỞI CHẠY GỐC (GIỮ NGUYÊN KIẾN TRÚC)
-# =========================================================
 class EzTouchApp(QWidget):
     def __init__(self):
         super().__init__()
@@ -604,13 +623,13 @@ class EzTouchApp(QWidget):
         self.action_button = QPushButton("STANDARD MODE")
         self.action_button.setCursor(Qt.PointingHandCursor)
         self.action_button.setFixedHeight(95)
-        self.action_button.setStyleSheet(STYLE_BLUE_BUTTON.replace("font-size: 16px;", "font-size: 18px;"))
+        self.action_button.setStyleSheet(STYLE_BLUE_BUTTON)
         self.action_button.clicked.connect(self.handle_engine_toggle)
         
         self.trial_button = QPushButton("TRIAL")
         self.trial_button.setCursor(Qt.PointingHandCursor)
         self.trial_button.setFixedHeight(95)
-        self.trial_button.setStyleSheet(STYLE_ORANGE_BUTTON.replace("font-size: 16px;", "font-size: 18px;"))
+        self.trial_button.setStyleSheet(STYLE_ORANGE_BUTTON)
         self.trial_button.clicked.connect(self.start_trial_mode)
 
         button_layout.addWidget(self.action_button, 6)

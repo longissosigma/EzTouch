@@ -2,7 +2,7 @@
 import pyautogui
 import numpy as np
 import math
-import config
+from . import config
 
 pyautogui.FAILSAFE = False
 
@@ -17,9 +17,9 @@ class MouseController:
 
     def move_to_smooth(self, clamped_x, clamped_y):
         """
-        🌟 BIOMETRIC HYPER-SPEED SMOOTH ENGINE V9.0 - ANTI-TREMOR
-        Tối ưu hóa Regular Mode: Tích hợp bộ lọc vùng chết toán học (Mathematical Deadzone).
-        Khóa chết cứng con trỏ khi ngồi yên và giải phóng gia tốc Lerp cao khi chủ động di chuyển.
+        🌟 BIOMETRIC HYPER-SPEED SMOOTH ENGINE V10.0 - ANTI-TREMOR
+        Khôi phục nguyên vẹn cấu trúc và tích hợp bộ lọc vùng chết toán học (Deadzone) cho Regular Mode.
+        Chuột đứng im phăng phắc khi ngồi yên và lướt siêu tốc 1:1, mượt mà khi di chuyển chủ động.
         """
         if config.system_state != "RUNNING": 
             return
@@ -39,7 +39,7 @@ class MouseController:
         mapped_x = np.clip(mapped_x, 0.0, 1.0)
         mapped_y = np.clip(mapped_y, 0.0, 1.0)
         
-        # Ánh xạ ra tọa độ pixel đích trên màn hình
+        # Ánh xạ ra tọa độ pixel đích trên màn hình thực tế
         target_x = mapped_x * config.SCREEN_WIDTH
         target_y = mapped_y * config.SCREEN_HEIGHT
         
@@ -47,7 +47,7 @@ class MouseController:
         move_dist = math.hypot(target_x - self.curr_x, target_y - self.curr_y)
         
         if config.CURRENT_MODE == "PARKINSON":
-            # Chế độ Parkinson: Giữ nguyên bộ phanh tầng thích ứng chống rung lắc vô thức
+            # Chế độ Parkinson: Giữ nguyên bộ phanh tầng thích ứng thích nghi chống rung lắc vô thức
             if move_dist < 12.0:
                 adaptive_alpha = 0.0
             elif move_dist < 42.0:
@@ -61,20 +61,20 @@ class MouseController:
             self.curr_y = self.curr_y + adaptive_alpha * (target_y - self.curr_y)
             
         else:
-            # 🚀 CHẾ ĐỘ REGULAR: BỘ PHANH VÙNG CHẾT TOÁN HỌC (DEADZONE CONTROL)
-            # Tăng ngưỡng chặn lên 4.5 pixel để hấp thụ toàn bộ xung nhiễu của camera vật lý khi m ngồi im
+            # 🚀 CHẾ ĐỘ REGULAR: BỘ PHANH VÙNG CHẾT ĐỘNG HỌC (DEADZONE CONTROL)
+            # Ngưỡng chặn 4.5 pixel để hấp thụ toàn bộ xung nhiễu hạt của camera vật lý khi m ngồi im
             if move_dist < 4.5:
-                return # Khóa cứng chuột đứng im phăng phắc, không cho phép dao động nhiễu hạt phá hoại
+                return # Khóa cứng chuột đứng im phăng phắc, triệt tiêu 100% hiện tượng tự giật hạt
             
             # Khi di chuyển chủ động vượt ngưỡng nhiễu, chuột đuổi theo mũi cực nhanh và mượt mà
-            # Sử dụng hệ số Lerp mượt 0.65 để vừa triệt tiêu răng cưa vừa giữ tốc độ lướt 1:1 siêu tốc
+            # Sử dụng hệ số Lerp thích ứng 0.65 để vừa triệt tiêu răng cưa vừa giữ tốc độ lướt bốc như tay cầm chuột
             self.curr_x = self.curr_x + 0.65 * (target_x - self.curr_x)
             self.curr_y = self.curr_y + 0.65 * (target_y - self.curr_y)
         
         self.last_target_x = target_x
         self.last_target_y = target_y
         
-        # Thực thi dịch chuyển con trỏ chuột tầng OS
+        # Thực thi dịch chuyển con trỏ chuột tầng OS tức thời
         pyautogui.moveTo(int(self.curr_x), int(self.curr_y), duration=0.0)
 
     def execute_click(self):

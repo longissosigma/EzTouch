@@ -3,7 +3,7 @@ import cv2
 import time
 import pyautogui
 import numpy as np
-import config
+from . import config
 import math
 
 class VirtualKeyboard:

@@ -7,11 +7,11 @@ import cv2
 import numpy as np
 import time
 import pygetwindow as gw # Thư viện bọc Win32 API điều khiển cửa sổ chuyên dụng
-import config
-from detector import FaceDetector
-from filters import DualOneEuroFilter
-from controller import MouseController
-from virtual_keyboard import VirtualKeyboard
+from . import config
+from .detector import FaceDetector
+from .filters import DualOneEuroFilter
+from .controller import MouseController
+from .virtual_keyboard import VirtualKeyboard
 
 RUNNING = True
 
@@ -178,7 +178,7 @@ def main():
             try:
                 target_window = gw.getWindowsWithTitle(window_name)
                 if target_window:
-                    target_window[0].minimize() # Ép camera thu nhỏ xuống taskbar tự động
+                    target_window[0].minimize() # Ép camera tự động thu nhỏ vật lý xuống thanh Taskbar
                     has_minimized = True
             except:
                 pass
