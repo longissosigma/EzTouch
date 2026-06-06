@@ -1,0 +1,43 @@
+                  GIẤY PHÉP BẢN QUYỀN VÀ SỞ HỮU TRÍ TUỆ
+===============================================================================
+
+Bản quyền © 2026 thuộc về Tác giả/Đội ngũ phát triển dự án FacileTouch.
+Mã số dự án: HS643630
+Cuộc thi: Samsung Solve for Tomorrow 2026.
+
+Mọi quyền được bảo lưu (All Rights Reserved).
+
+Bằng việc tiếp cận, nhận hoặc sử dụng mã nguồn, tài liệu đi kèm hoặc các tệp tin 
+nhị phân đã biên dịch (.pyd, .exe) của dự án này, Ban giám khảo (BGK), Hội đồng 
+đánh giá cuộc thi Samsung Solve for Tomorrow và các bên liên quan đồng ý tuân thủ 
+các điều khoản sau đây:
+
+1. PHẠM VI CẤP PHÉP SỬ DỤNG
+   - Cấp phép quyền chạy thử, khảo sát, kiểm tra, thực thi và chấm điểm sản phẩm 
+     cho Hội đồng Giám khảo trong khuôn khổ cuộc thi Samsung Solve for Tomorrow.
+   - Giấy phép này CHỈ áp dụng cho mục đích đánh giá công nghệ và giải pháp.
+
+2. CÁC HÀNH VI BỊ NGHIÊM CẤM (RESTRICTIONS)
+   - KHÔNG ĐƯỢC PHÉP sao chép, phân phối, thương mại hóa, chuyển nhượng hoặc tái 
+     cấp phép một phần hoặc toàn bộ mã nguồn (.py) và các file mã máy nhị phân 
+     (.pyd, .exe) cho bất kỳ bên thứ ba nào nằm ngoài ban tổ chức giải đấu.
+   - KHÔNG ĐƯỢC PHÉP dịch ngược (decompile), đảo ngược kỹ thuật (reverse engineer), 
+     hoặc tìm cách trích xuất mã nguồn từ các tệp tin đã được mã hóa rối (obfuscated) 
+     và biên dịch mã máy của hệ thống.
+   - KHÔNG ĐƯỢC PHÉP chỉnh sửa, thay đổi cấu trúc mã nguồn lõi nhằm mục đích thay 
+     đổi thông tin sở hữu trí tuệ hoặc mạo danh mã số dự thi HS643630.
+
+3. SỞ HỮU TRÍ TUỆ VÀ BẢO MẬT LÕI
+   - Toàn bộ thuật toán tối ưu hệ thống, cấu trúc thư mục, các module chức năng 
+     đã được biên dịch sang định dạng mã máy nhị phân (.pyd) để bảo vệ giải pháp 
+     gốc độc quyền của dự án mã số HS643630.
+   - Quyền sở hữu trí tuệ tối cao đối với giải pháp công nghệ thuộc về đội thi.
+
+4. MIỄN TRỪ TRÁCH NHIỆM (DISCLAIMER)
+   - Phần mềm được cung cấp theo nguyên tắc "NGUYÊN BẢN" (AS IS), không kèm theo 
+     bất kỳ cam kết hay bảo hành nào về mặt thương mại thương trường nằm ngoài phạm 
+     vi ứng dụng giải pháp công nghệ số trong cuộc thi.
+
+===============================================================================
+     CẢM ƠN BAN GIÁM KHẢO SAMSUNG SOLVE FOR TOMORROW ĐÃ ĐÁNH GIÁ DỰ ÁN
+===============================================================================
