@@ -3,7 +3,7 @@ import cv2
 import time
 import pyautogui
 import numpy as np
-from . import config
+import config
 import math
 
 class VirtualKeyboard:
@@ -21,6 +21,9 @@ class VirtualKeyboard:
         self.is_visible = False
         self.is_dragging_mode = False
         self.is_window_created = False
+        
+        # 🌟 BỘ PHANH THỜI GIAN COOLDOWN CHỐNG TỰ KÍCH HOẠT LẠI LẬP TỨC
+        self.last_drop_time = 0.0
 
     def check_dwell_clicking(self):
         if not config.is_keyboard_open or config.system_state != "RUNNING":
@@ -53,6 +56,7 @@ class VirtualKeyboard:
         mx, my = pyautogui.position()
         current_time = time.time()
         
+        # 🌟 1. LUỒNG DỊCH CHUYỂN BÀN PHÍM THEO MŨI TRONG CHẾ ĐỘ DRAG MODE
         if self.is_dragging_mode:
             new_x = int(mx - self.kb_w // 2)
             new_y = int(my - self.kb_h // 2)
@@ -88,6 +92,16 @@ class VirtualKeyboard:
         row_idx = min(rel_y // cell_h, rows - 1)
         hovered_key = config.KEYBOARD_LAYOUT[row_idx][col_idx]
 
+        # 🔥 BỘ CHẶN COOLDOWN: Nếu vừa ghim bàn phím xuống chưa quá 1.2 giây, 
+        # khóa chết nút "MOVE" không cho phép tự động kích hoạt lại bậy bạ
+        if hovered_key == "MOVE" and (current_time - self.last_drop_time < 1.2):
+            self.dwell_start_time = None
+            self.current_hovered_key = None
+            self.last_hovered_cell = (-1, -1)
+            self.progress_pct = 0.0
+            self.draw_standalone_keyboard()
+            return
+
         current_cell = (row_idx, col_idx)
         if current_cell != self.last_hovered_cell:
             self.dwell_start_time = current_time
@@ -112,12 +126,34 @@ class VirtualKeyboard:
         self.draw_standalone_keyboard()
 
     def execute_active_mouth_type(self):
+        """🌟 XỬ LÝ HÁ MỒM (CLICK CHỦ ĐỘNG) TRÊN BÀN PHÍM ẢO"""
+        current_time = time.time()
+        
+        # 🔥 ĐÃ SỬA TRIỆT ĐỂ: Nếu đang kéo dịch chuyển, há mồm một phát (Click) 
+        # là tắt dragging và chốt thời gian ghim 'last_drop_time' để kích hoạt bộ phanh khóa
+        if self.is_dragging_mode:
+            self.is_dragging_mode = False
+            self.last_drop_time = current_time
+            self.dwell_start_time = current_time
+            self.progress_pct = 0.0
+            self.current_hovered_key = None
+            self.last_hovered_cell = (-1, -1)
+            return True 
+
         if config.is_keyboard_open and self.current_hovered_key and not self.is_dragging_mode:
+            if config.is_trial_active and config.trial_task_stage == 3 and not config.is_chat_input_focused:
+                self.dwell_start_time = current_time
+                self.progress_pct = 0.0
+                return True 
+                
             if self.current_hovered_key == "MOVE":
+                # Chặn luôn click nhanh vào MOVE nếu đang trong thời gian xả phanh cooldown
+                if current_time - self.last_drop_time < 1.2:
+                    return True
                 self.is_dragging_mode = True
             else:
                 self.trigger_key_press(self.current_hovered_key)
-            self.dwell_start_time = time.time()
+            self.dwell_start_time = current_time
             self.progress_pct = 0.0
             return True
         return False
@@ -125,7 +161,12 @@ class VirtualKeyboard:
     def trigger_key_press(self, key_text):
         if key_text == "CLOSE":
             config.is_keyboard_open = False
-        elif key_text == "SPACE":
+            return
+
+        if config.is_trial_active and config.trial_task_stage == 3 and not config.is_chat_input_focused:
+            return 
+
+        if key_text == "SPACE":
             pyautogui.press("space")
         elif key_text == "BACKSPACE":
             pyautogui.press("backspace")
@@ -141,8 +182,17 @@ class VirtualKeyboard:
         
         if self.is_dragging_mode:
             cv2.rectangle(kb_frame, (0, 0), (self.kb_w, self.kb_h), (0, 165, 255), 6)
-            cv2.putText(kb_frame, "CHEDO DI CHUYEN: HA MOM (CLICK) NHE PHAT DE GHIM CO DINH TRANH LAG", (60, self.kb_h // 2),
+            instruct_text = "CHEDO DI CHUYEN: HA MOM (CLICK) 1 CAI DE CO DINH BAN PHIM TAI DAY"
+            cv2.putText(kb_frame, instruct_text, (50, self.kb_h // 2 + 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 165, 255), 2, cv2.LINE_AA)
+            cv2.imshow(self.window_name, kb_frame)
+            return
+
+        if config.is_trial_active and config.trial_task_stage == 3 and not config.is_chat_input_focused:
+            cv2.rectangle(kb_frame, (0, 0), (self.kb_w, self.kb_h), (0, 0, 240), 6)
+            warn_str = "BAN CHUA NHAP VAO O NHAN TIN NE, HAY NHAP VAO ROI MOI GO CHU NHE!"
+            cv2.putText(kb_frame, warn_str, (45, self.kb_h // 2 + 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 0, 255), 2, cv2.LINE_AA)
             cv2.imshow(self.window_name, kb_frame)
             return
 

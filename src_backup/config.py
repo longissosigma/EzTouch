@@ -18,7 +18,9 @@ AUTOCENTER_STABLE_DURATION = 1.5 # Cố định chuẩn 1.5 giây
 DWELL_DURATION = 2.0              
 DWELL_PIXEL_RADIUS = 8            
 is_keyboard_open = False          
-MAGNET_SNAP_RADIUS = 35           
+
+# 🌟 DYNAMIC FITTS' LAW CONFIGURATION
+MAGNET_SNAP_RADIUS = 15           # Vùng đệm 15px tạo lực hút nam châm ảo theo yêu cầu
 
 KEYBOARD_LAYOUT = [
     ["A", "B", "C", "D", "E", "F"],
@@ -52,3 +54,10 @@ CURRENT_MODE = "UNDECIDED"
 is_trial_active = False
 trial_task_stage = 0  
 trial_countdown_pct = 0
+
+# Biến theo dõi focus đồng bộ đa tầng toàn hệ thống
+is_chat_input_focused = False
+trial_keyboard_warning_text = ""
+
+# 🌟 DANH SÁCH TỌA ĐỘ MỤC TIÊU NAM CHÂM ẢO TOÀN CỤC (Lưu cấu trúc từ điển: {"Tên_nút": (Tâm_X, Tâm_Y)})
+MAGNETIC_TARGETS = {}

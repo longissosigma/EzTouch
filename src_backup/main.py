@@ -68,6 +68,7 @@ def main():
         results = detector.process_frame(frame)
         raw_nose_x, raw_nose_y = detector.get_nose_position(results)
         mouth_ratio = detector.get_mouth_open_ratio(results)
+        config.last_mouth_ratio = mouth_ratio 
         head_roll = detector.get_head_roll(results)
         current_time = time.time()
 

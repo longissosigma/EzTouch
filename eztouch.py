@@ -262,7 +262,6 @@ class EzTouchTrialSpace(QWidget):
         self.btn_next2.setFixedWidth(280)
         self.btn_next2.setStyleSheet(STYLE_BLUE_BUTTON)
         self.btn_next2.hide()
-        # 🌟 FIX CHUẨN: Thay đổi index từ (2) thành (3) để nhảy chính xác sang màn Task 3
         self.btn_next2.clicked.connect(lambda: self.go_to_stage(3))
         
         layout.addWidget(self.lbl_guide2)
@@ -311,14 +310,12 @@ class EzTouchTrialSpace(QWidget):
         
         self.lbl_guide4 = QLabel("Task 4: CƠ CHẾ NGHỈ NGƠI TẠM DỪNG (PAUSE/RESUME)")
         self.lbl_guide4.setStyleSheet("font-size: 22px; font-weight: 700; color: #2B6CB0; letter-spacing: 1.5px;")
-        self.layout.addWidget(self.lbl_guide4)
         
         self.lbl_sub_guide4 = QLabel("Khi bạn muốn nghỉ ngơi hãy ấn vào nút 'PAUSE' màu đỏ trên thanh công cụ dọc góc trái nhé!")
         self.lbl_sub_guide4.setStyleSheet("font-size: 18px; color: #E53E3E; font-weight: bold; margin: 30px;")
         
-        # 🌟 SỬA CHÍNH XÁC DÒNG NÀY: Điền lại chữ "HOÀN THÀNH" đầy đủ
         self.btn_next4 = QPushButton("HOÀN THÀNH HÀNH TRÌNH ▶")
-        self.btn_next4.setFixedWidth(360) # Tăng nhẹ chiều rộng lên 360 để text không bị tràn viền nút
+        self.btn_next4.setFixedWidth(360) 
         self.btn_next4.setStyleSheet(STYLE_BLUE_BUTTON)
         self.btn_next4.hide()
         self.btn_next4.clicked.connect(lambda: self.go_to_stage(5))
@@ -378,7 +375,34 @@ class EzTouchTrialSpace(QWidget):
             self.lbl_sub_guide3.setStyleSheet("font-size: 16px; color: #ED8936; font-weight: bold;")
 
     def monitor_user_actions(self):
-        if not config.is_trial_active: return
+        if not config.is_trial_active: 
+            config.MAGNETIC_TARGETS = {} # Xóa sạch bia mục tiêu nếu không ở trial mode
+            return
+        
+        # 🌟 CẬP NHẬT TỌA ĐỘ BIA NAM CHÂM ẢO THỜI GIAN THỰC CHO TỪNG TASK (Dynamic Fitts' Law)
+        if config.trial_task_stage == 0 and hasattr(self, 'btn_start_onboarding') and self.btn_start_onboarding.isEnabled():
+            # Lấy tọa độ toàn cục của tâm nút Bắt đầu trải nghiệm
+            g_pos = self.btn_start_onboarding.mapToGlobal(self.btn_start_onboarding.rect().center())
+            config.MAGNETIC_TARGETS = {"START_ONBOARDING": (g_pos.x(), g_pos.y())}
+            
+        elif config.trial_task_stage == 1 and hasattr(self, 'target_btn') and self.target_btn.isVisible():
+            # Lấy tọa độ toàn cục của tâm nút mục tiêu màu cam ở Task 1
+            g_pos = self.target_btn.mapToGlobal(self.target_btn.rect().center())
+            config.MAGNETIC_TARGETS = {"TARGET_ORANGE": (g_pos.x(), g_pos.y())}
+            
+        elif config.trial_task_stage == 2 and hasattr(self, 'btn_next2') and self.btn_next2.isVisible():
+            g_pos = self.btn_next2.mapToGlobal(self.btn_next2.rect().center())
+            config.MAGNETIC_TARGETS = {"NEXT_TASK_3": (g_pos.x(), g_pos.y())}
+            
+        elif config.trial_task_stage == 3 and hasattr(self, 'chat_input'):
+            g_pos = self.chat_input.mapToGlobal(self.chat_input.rect().center())
+            config.MAGNETIC_TARGETS = {"CHAT_INPUT_BOX": (g_pos.x(), g_pos.y())}
+            
+        elif config.trial_task_stage == 4 and hasattr(self, 'btn_next4') and self.btn_next4.isVisible():
+            g_pos = self.btn_next4.mapToGlobal(self.btn_next4.rect().center())
+            config.MAGNETIC_TARGETS = {"FINISH_BUTTON": (g_pos.x(), g_pos.y())}
+        else:
+            config.MAGNETIC_TARGETS = {}
         
         if config.trial_task_stage == 0:
             self.progress_bar.setValue(config.trial_countdown_pct)
@@ -395,14 +419,15 @@ class EzTouchTrialSpace(QWidget):
                 self.btn_start_onboarding.setEnabled(True)
                 self.btn_start_onboarding.setStyleSheet(STYLE_BLUE_BUTTON)
 
+        # 🌟 SỬA VẤN ĐỀ 1: Khóa chặt logic tự động kích hoạt. Khi chuột lọt vào hitbox, CHỈ đổi chữ hướng dẫn.
         elif config.trial_task_stage == 1 and self.target_btn.isVisible():
             btn_pos = self.target_btn.mapToGlobal(self.target_btn.rect().topLeft())
             import pyautogui
             mx, my = pyautogui.position()
             if (btn_pos.x() <= mx <= btn_pos.x() + self.target_btn.width() and 
                 btn_pos.y() <= my <= btn_pos.y() + self.target_btn.height()):
-                self.lbl_sub_guide1.setText("Bạn đã làm tốt lắm, hãy HÁ MỒM để thực hiện cú nhấp chuột nào!")
-                self.lbl_sub_guide1.setStyleSheet("font-size: 16px; color: #38A169; font-weight: bold;")
+                self.lbl_sub_guide1.setText("Bạn đã chạm mục tiêu! Hãy HÁ MỒM (Click) để kích hoạt hoàn thành!")
+                self.lbl_sub_guide1.setStyleSheet("font-size: 16px; color: #3182CE; font-weight: bold;")
             else:
                 if mx > config.SCREEN_WIDTH // 3 or my > config.SCREEN_HEIGHT // 3:
                     self.lbl_sub_guide1.setText("Cố lên nào, sắp được rồi! Hãy di chuyển con trỏ vào ô màu cam nhé.")
@@ -424,17 +449,28 @@ class EzTouchTrialSpace(QWidget):
                 self.btn_next2.show()
                 
         elif config.trial_task_stage == 3:
-            self.chat_input.setFocus()
-            if config.is_keyboard_open and "HÃY DI CHUYỂN" not in self.lbl_sub_guide3.text().upper():
-                self.lbl_sub_guide3.setText("Bàn phím đã mở! Hãy di chuyển mũi vào ô chữ bất kỳ trên bàn phím ảo và giữ đó 2 giây hoặc há mồm để nhấp.")
-                self.lbl_sub_guide3.setStyleSheet("font-size: 15px; color: #2B6CB0; font-weight: bold;")
-            if len(self.chat_input.text()) >= 3 and config.is_keyboard_open:
-                self.lbl_sub_guide3.setText("Quá đỉnh! Giờ hãy ấn lại nút '⌨ OFF' ở thanh công cụ để tắt bàn phím ảo.")
+            is_focused = self.chat_input.hasFocus()
+            config.is_chat_input_focused = is_focused 
+            
+            if not is_focused:
+                self.lbl_sub_guide3.setText("Hãy nhấp vào ô tin nhắn để nhắn tin")
                 self.lbl_sub_guide3.setStyleSheet("font-size: 16px; color: #E53E3E; font-weight: bold;")
-            if len(self.chat_input.text()) >= 3 and not config.is_keyboard_open:
-                self.lbl_sub_guide3.setText("Hoàn hảo! Bạn đã tắt bàn phím ảo thành công.")
-                self.lbl_sub_guide3.setStyleSheet("font-size: 16px; color: #38A169; font-weight: bold;")
-                self.btn_next3.show()
+                config.trial_keyboard_warning_text = "CHUA NHAP VAO O CHAT! HAY NHAP VAO ROI MOI GO CHU NHE!"
+            else:
+                config.trial_keyboard_warning_text = "" 
+                if not config.is_keyboard_open:
+                    self.lbl_sub_guide3.setText("Tuyệt vời! Bây giờ hãy nhìn sang thanh công cụ dọc, NHẤP VÀO NÚT '⌨ ON' để mở bàn phím ảo.")
+                    self.lbl_sub_guide3.setStyleSheet("font-size: 16px; color: #ED8936; font-weight: bold;")
+                elif config.is_keyboard_open and len(self.chat_input.text()) < 3:
+                    self.lbl_sub_guide3.setText("Bàn phím đã mở! Hãy di chuyển mũi vào ô chữ bất kỳ trên bàn phím ảo và giữ đó 2 giây hoặc há mồm để nhấp.")
+                    self.lbl_sub_guide3.setStyleSheet("font-size: 15px; color: #2B6CB0; font-weight: bold;")
+                elif len(self.chat_input.text()) >= 3 and config.is_keyboard_open:
+                    self.lbl_sub_guide3.setText("Quá đỉnh! Giờ hãy ấn lại nút '⌨ OFF' ở thanh công cụ để tắt bàn phím ảo.")
+                    self.lbl_sub_guide3.setStyleSheet("font-size: 16px; color: #E53E3E; font-weight: bold;")
+                elif len(self.chat_input.text()) >= 3 and not config.is_keyboard_open:
+                    self.lbl_sub_guide3.setText("Hoàn hảo! Bạn đã tắt bàn phím ảo thành công.")
+                    self.lbl_sub_guide3.setStyleSheet("font-size: 16px; color: #38A169; font-weight: bold;")
+                    self.btn_next3.show()
 
         elif config.trial_task_stage == 4 and not self.btn_next4.isVisible():
             if config.system_state == "PAUSED":
