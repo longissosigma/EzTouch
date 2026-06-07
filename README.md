@@ -1,9 +1,9 @@
-# FacileTouch - Head Mouse Accessibility Tool
+# EzTouch - Head Mouse Accessibility Tool
 
 Ứng dụng hỗ trợ công nghệ (Accessibility) giúp người khuyết tật vận động hoặc người mắc hội chứng Parkinson có thể điều khiển chuột máy tính thông qua cử động mặt và ánh mắt.
 
 ## Tính năng nổi bật
-Facile Touch
+EzTouch
 1/ Instruction
 - Di chuyển: người dùng di chuyển đầu (cụ thể là mũi) để con trỏ chuột trên màn hình di chuyển
 
